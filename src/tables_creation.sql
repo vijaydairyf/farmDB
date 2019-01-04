@@ -10,7 +10,7 @@ CREATE TABLE afi_lab(
   afi_lab_id int primary key,
   production_date DATE,
   last_fix_date DATE,
-  Milking_Position_ID int,
+  milking_station_ID int,
   FOREIGN KEY (milking_station_ID) REFERENCES milking_station(milking_station_ID)
 );
 
@@ -18,7 +18,7 @@ CREATE TABLE afi_weight(
   afi_weight_id int primary key,
   production_date DATE,
   last_fix_date DATE,
-  Milking_Position_ID int,
+  milking_station_ID int,
   FOREIGN KEY (milking_station_ID) REFERENCES milking_station(milking_station_ID)
 );
 
@@ -38,10 +38,12 @@ CREATE TABLE dairy_farm(
 
 CREATE TABLE milking_station(
   milking_station_ID int primary key,
-  GPS_Coordinates float(12),
+  GPS_coordinates float(12),
   country varchar(50)
 );
 
+
+/* TODO: add an constraint that only after num_of_milkings>5 the milking is recorded*/
 CREATE TABLE holshtein_cow(
   afi_tag_id int primary key,
   FOREIGN KEY (afi_tag_id) REFERENCES afi_tag(afi_tag_id),
@@ -49,6 +51,7 @@ CREATE TABLE holshtein_cow(
   parturitions int,
   gynecologic_status varchar(50),
   num_of_milkings int,
+  last_milk_date DATE,
   generation int
 );
 
@@ -59,7 +62,8 @@ CREATE TABLE angus_cow(
   parturitions int,
   gynecologic_status varchar(50),
   num_of_milkings int,
-  Foot_size int
+  last_milk_date DATE,
+  foot_size int
 );
 
 CREATE TABLE milking(
@@ -75,8 +79,8 @@ CREATE TABLE milking(
 CREATE TABLE in_dairy_farm(
   afi_lab_id int,
   afi_weight_id int,
-  Milking_Position_ID int,
-  Dairy_Farm_ID int
+  milking_station_ID int,
+  dairy_farm_ID int
   CONSTRAINT PK_in_dairy_farm PRIMARY KEY (afi_lab_id, afi_weight_id, milking_station_ID)
 )
 
@@ -92,3 +96,16 @@ DROP TABLE iron_bracelet;
 DROP TABLE afi_weight;
 DROP TABLE afi_lab;
 DROP TABLE afi_tag;
+
+/* first view of milkings per cow with date */
+CREATE VIEW milking_by_id
+AS
+SELECT afi_tag_id, last_milk_date,
+       cow_weight_after_milking, milk_amount
+       protein_amount, fat_amount, milk_conductivity
+FROM angus_cow, holshtein_cow, milking
+GROUP BY afi_tag_id
+
+SELECT *
+FROM milking_by_id
+WHERE afi_tag_id = 100
